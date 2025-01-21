@@ -16,16 +16,19 @@ func Example() {
 		[]byte("strings of the same "),
 		[]byte("length that fit in a"),
 		[]byte("single block.       "),
-		[]byte("Another short string."),
-		[]byte("Yet another string!  "),
-		[]byte("One more for good luck."),
-		[]byte("Final string here.   "),
+		[]byte("These are some short"),
+		[]byte("strings of the same "),
+		[]byte("length that fit in a"),
+		[]byte("single block.       "),
 	}
 	var hashes [8][32]byte
 
 	// The user could branch to a fast non-SIMD implementation if this function
 	// returns false.
 	if !keccakf1600.IsEnabledX8() {
+
+		fmt.Println("keccakf1600 running with non-SIMD implementation")
+
 		// Compute hashes separately using golang.org/x/crypto/sha3 instead
 		// when a fast eight-way implementation is not available. A generic
 		// keccakf1600 implementation is quite a bit slower than using
@@ -37,6 +40,9 @@ func Example() {
 			_, _ = h.Read(hashes[i][:])
 		}
 	} else {
+
+		fmt.Println("keccakf1600 running with SIMD implementation")
+
 		// f1600 acts on 1600 bits arranged as 25 uint64s. Our eight-way f1600
 		// acts on eight interleaved states; that is a [200]uint64. (A separate
 		// type is used to ensure that the encapsulated [200]uint64 is aligned
@@ -76,5 +82,12 @@ func Example() {
 
 	fmt.Printf("\n%x\n%x\n%x\n%x\n%x\n%x\n%x\n%x\n", hashes[0], hashes[1], hashes[2], hashes[3], hashes[4], hashes[5], hashes[6], hashes[7])
 	// Output:
-	// (Expected output for the hashes)
+	// 9b48efc4f4e562fe28c510b2ad3966b101ac20066dc88117d85a595cc965f7e4
+	// 19333d8bb71edce81f0630e4154abea83bf7d2f7e709d62fda878b6e9db9c9c1
+	// 28f31cc0b8d95185fbba5c4ed5cd94ed7dba0e13c21ca830d1325a212defdfc5
+	// 51392299d6b10e62b98eb02c9540784046cc9c83e46eddd2ce57cddc2037f917
+	// 9b48efc4f4e562fe28c510b2ad3966b101ac20066dc88117d85a595cc965f7e4
+	// 19333d8bb71edce81f0630e4154abea83bf7d2f7e709d62fda878b6e9db9c9c1
+	// 28f31cc0b8d95185fbba5c4ed5cd94ed7dba0e13c21ca830d1325a212defdfc5
+	// 51392299d6b10e62b98eb02c9540784046cc9c83e46eddd2ce57cddc2037f917
 }
