@@ -64,6 +64,29 @@ func TestKeccakF1600x4(t *testing.T) {
 	})
 }
 
+func TestKeccakF1600x8(t *testing.T) {
+	test := func(t *testing.T, turbo bool, f func(s *StateX8, a []uint64)) {
+		t.Helper()
+		var state StateX8
+		a := state.Initialize(turbo)
+		f(&state, a)
+		for i := 0; i < 25; i++ {
+			for j := 0; j < 8; j++ {
+				if a[8*i+j] != permutationOfZeroes[i] {
+					t.Fatalf("%X", a)
+				}
+			}
+		}
+	}
+
+	t.Run("Generic", func(t *testing.T) {
+		test(t, false, func(s *StateX8, a []uint64) { permuteScalarX8(a, false) })
+	})
+	t.Run("SIMD", func(t *testing.T) {
+		test(t, false, func(s *StateX8, a []uint64) { s.Permute() })
+	})
+}
+
 func TestTurboX2(t *testing.T) {
 	var state1, state2 StateX2
 	a1 := state1.Initialize(true)
@@ -80,6 +103,17 @@ func TestTurboX4(t *testing.T) {
 	a1 := state1.Initialize(true)
 	a2 := state2.Initialize(true)
 	permuteScalarX4(a1, true)
+	state2.Permute()
+	if !reflect.DeepEqual(a1, a2) {
+		t.Fatal()
+	}
+}
+
+func TestTurboX8(t *testing.T) {
+	var state1, state2 StateX8
+	a1 := state1.Initialize(true)
+	a2 := state2.Initialize(true)
+	permuteScalarX8(a1, true)
 	state2.Permute()
 	if !reflect.DeepEqual(a1, a2) {
 		t.Fatal()
@@ -125,6 +159,29 @@ func BenchmarkF1600x4(b *testing.B) {
 		})
 		b.Run("SIMD", func(b *testing.B) {
 			benchmark(b, turbo, func(s *StateX4, a []uint64) { s.Permute() })
+		})
+	}
+
+	b.Run("Regular", func(b *testing.B) { bench2(b, false) })
+	b.Run("Turbo", func(b *testing.B) { bench2(b, true) })
+}
+
+func BenchmarkF1600x8(b *testing.B) {
+	benchmark := func(b *testing.B, turbo bool, f func(s *StateX8, a []uint64)) {
+		var state StateX8
+		a := state.Initialize(turbo)
+
+		for i := 0; i < b.N; i++ {
+			f(&state, a)
+		}
+	}
+
+	bench2 := func(b *testing.B, turbo bool) {
+		b.Run("Generic", func(b *testing.B) {
+			benchmark(b, turbo, func(s *StateX8, a []uint64) { permuteScalarX8(a, turbo) })
+		})
+		b.Run("SIMD", func(b *testing.B) {
+			benchmark(b, turbo, func(s *StateX8, a []uint64) { s.Permute() })
 		})
 	}
 
