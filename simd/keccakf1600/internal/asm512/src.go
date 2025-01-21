@@ -116,7 +116,10 @@ func main() {
 
 			// Compute the new words s[i] ^ (s[i+2] & ~s[i+1])
 			for i := 0; i < 5; i++ {
-				VPTERNLOGQ(U8(0x96), s[(i+1)%5], s[(i+2)%5], s[i])
+				VPANDNQ(s[(i+2)%5], s[(i+1)%5], t[i])
+			}
+			for i := 0; i < 5; i++ {
+				VPXORQ(s[i], t[i], t[i])
 			}
 
 			// Round constant
